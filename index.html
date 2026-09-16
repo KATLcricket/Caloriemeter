@@ -449,14 +449,24 @@ nav{
 }
 .tabs{
   max-width:520px;margin:0 auto;
-  display:grid;grid-template-columns:repeat(3,1fr)
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:1fr;
+  align-items:stretch
 }
 .tab{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:10px 0 12px;color:var(--ink-3);gap:3px
+  padding:9px 2px 11px;color:var(--ink-3);gap:4px;min-width:0
 }
-.tab .icon{font-size:20px;line-height:1}
-.tab .tlabel{font-size:10.5px;font-weight:500}
+.tab .icon{
+  width:22px;height:22px;display:block;flex:0 0 auto
+}
+.tab .icon svg{width:100%;height:100%;display:block;stroke:currentColor;fill:none;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tab .tlabel{
+  font-size:10.5px;font-weight:500;line-height:1;
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
 .tab.on{color:var(--accent)}
 .tab.on .tlabel{font-weight:700}
 
@@ -650,6 +660,28 @@ nav{
   margin-left:6px;vertical-align:middle
 }
 .libgrp{font-size:11px;color:var(--ink-3);margin:16px 0 6px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+
+/* session detail */
+.dex{padding:12px 0 4px;border-top:1px solid var(--line)}
+.dex:first-of-type{border-top:none}
+.dex-h{display:flex;align-items:baseline;gap:8px;min-width:0}
+.dex-h b{
+  font-family:var(--disp);font-size:14.5px;font-weight:700;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.dex-h span{font-size:11px;color:var(--ink-3);flex:0 0 auto}
+.dset{
+  display:grid;grid-template-columns:22px minmax(0,1fr) auto;
+  gap:10px;align-items:center;padding:5px 0;font-variant-numeric:tabular-nums
+}
+.dset em{font-style:normal;font-size:11.5px;color:var(--ink-3);text-align:center}
+.dset b{font-family:var(--disp);font-size:14.5px;font-weight:700}
+.dset span{font-size:11.5px;color:var(--ink-3)}
+.hmonth{
+  font-size:11px;font-weight:700;color:var(--ink-3);
+  letter-spacing:.06em;text-transform:uppercase;margin:18px 0 2px
+}
+.hmonth:first-child{margin-top:4px}
 
 </style>
 </head>
@@ -937,10 +969,10 @@ nav{
 </div>
 
 <nav><div class="tabs">
-  <button class="tab on" data-v="today"><span class="icon">◉</span><span class="tlabel">Food</span></button>
-  <button class="tab" data-v="train"><span class="icon">⬛</span><span class="tlabel">Train</span></button>
-  <button class="tab" data-v="trends"><span class="icon">▤</span><span class="tlabel">Trends</span></button>
-  <button class="tab" data-v="set"><span class="icon">⚙</span><span class="tlabel">Settings</span></button>
+  <button class="tab on" data-v="today"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/></svg></span><span class="tlabel">Food</span></button>
+  <button class="tab" data-v="train"><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></svg></span><span class="tlabel">Train</span></button>
+  <button class="tab" data-v="trends"><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M8 19v-6M12.5 19V9M17 19v-4M21 19H4"/></svg></span><span class="tlabel">Trends</span></button>
+  <button class="tab" data-v="set"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6M18.4 18.4l-1.6-1.6M7.2 7.2L5.6 5.6"/></svg></span><span class="tlabel">Settings</span></button>
 </div></nav>
 
 <div class="scrim" id="scrim"></div>
@@ -1006,6 +1038,13 @@ nav{
     </div>
     <div class="res" id="exresults"></div>
   </div>
+</div>
+
+<!-- SESSION HISTORY SHEET -->
+<div class="sheet" id="sheet-hist">
+  <div class="grip"></div>
+  <div class="sheet-h"><h2>Session history</h2><button class="x" data-close>Done</button></div>
+  <div class="sheet-b" id="histbody"></div>
 </div>
 
 <!-- SESSION SUMMARY SHEET -->
@@ -1609,6 +1648,7 @@ function fmtDur(s){
   return h>0 ? h+':'+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0')
              : m+':'+String(x).padStart(2,'0');
 }
+const fmtVol = v => v>=10000 ? r1(v/1000)+'k' : r0(v).toLocaleString();
 function volumeOf(w){
   let v=0; (w.entries||[]).forEach(en=>en.sets.forEach(s=>{ if(s.done) v+=(+s.weight||0)*(+s.reps||0); }));
   return v;
@@ -1651,7 +1691,8 @@ function renderTrain(){
   if(L.active){ el.innerHTML=activeHTML(L.active); return; }
   const recent=L.workouts.slice(-3).reverse();
   el.innerHTML =
-    '<button class="btn" id="quickstart" style="margin-top:6px">Start empty session</button>'+
+    '<h3 class="sec" style="margin-top:16px">Train</h3>'+
+    '<button class="btn" id="quickstart" style="margin-top:0">Start empty session</button>'+
     '<h3 class="sec">Routines</h3>'+
     (L.routines.length? L.routines.map(r=>{
       const names=r.items.map(i=>{const e=exById(i.exerciseId); return e?e.name:null;}).filter(Boolean);
@@ -1665,14 +1706,15 @@ function renderTrain(){
         '</div></div>';
     }).join('') : '<p class="note">No routines yet. Build one below.</p>')+
     '<button class="btn ghost" id="newroutine">New routine</button>'+
-    (recent.length? '<h3 class="sec">Recent sessions</h3>'+recent.map(w=>workoutRow(w)).join('') : '');
+    (recent.length? '<h3 class="sec">Recent sessions</h3>'+recent.map(w=>workoutRow(w)).join('')+
+      '<button class="btn ghost" id="allsessions">View all '+L.workouts.length+' sessions</button>' : '');
 }
 function workoutRow(w){
   const d=new Date(w.endedAt||w.startedAt);
   return '<button class="wrow" data-wk="'+w.id+'"><span class="wn"><b>'+esc(w.name)+'</b>'+
     '<span>'+d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})+
     ' · '+setsDone(w)+' sets · '+fmtDur(((w.endedAt||0)-(w.startedAt||0))/1000)+'</span></span>'+
-    '<span class="wv">'+r0(volumeOf(w)).toLocaleString()+' '+U()+'</span></button>';
+    '<span class="wv">'+fmtVol(volumeOf(w))+' '+U()+'</span></button>';
 }
 
 function activeHTML(a){
@@ -1680,7 +1722,7 @@ function activeHTML(a){
   const vol=r0(volumeOf(a)), done=setsDone(a);
   let html='<div class="live"><div class="lh"><div class="lname">'+esc(a.name)+'</div>'+
     '<div class="clock" id="elapsed">0:00</div></div>'+
-    '<div class="lstats"><span>'+done+' sets done</span><span>'+vol.toLocaleString()+' '+U()+' volume</span></div>'+
+    '<div class="lstats"><span>'+done+' sets done</span><span>'+fmtVol(vol)+' '+U()+' volume</span></div>'+
     '<button class="finish" id="finishwk">Finish session</button></div>';
 
   html += el.map((en,ei)=>{
@@ -1748,17 +1790,62 @@ function finishWorkout(){
   showSummary(a, prs);
 }
 function showSummary(w, prs){
+  openWorkout = w.id;
+  const d = new Date(w.endedAt||w.startedAt);
   document.getElementById('sumttl').textContent = w.name;
+  const stamp = d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'})+
+    ' · '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+
+  const body = (w.entries||[]).map(en=>{
+    const ex = exById(en.exerciseId)||{name:'Exercise',gear:''};
+    let best=0; en.sets.forEach(x=>{ best=Math.max(best, e1rm(+x.weight||0,+x.reps||0)); });
+    return '<div class="dex"><div class="dex-h"><b>'+esc(ex.name)+'</b>'+
+      '<span>best '+r1(best)+' '+U()+' e1RM</span></div>'+
+      en.sets.map((x,i)=>{
+        const v=(+x.weight||0)*(+x.reps||0);
+        return '<div class="dset"><em>'+(i+1)+'</em>'+
+          '<b>'+(+x.weight||0)+' '+U()+' × '+(+x.reps||0)+'</b>'+
+          '<span>'+r0(v).toLocaleString()+' '+U()+'</span></div>';
+      }).join('')+'</div>';
+  }).join('');
+
   document.getElementById('sumbody').innerHTML =
-    '<div class="figs c3"><div><div class="v">'+fmtDur((w.endedAt-w.startedAt)/1000)+'</div><div class="l">duration</div></div>'+
+    '<p class="note" style="margin-top:0">'+stamp+'</p>'+
+    '<div class="figs c3"><div><div class="v">'+fmtDur(((w.endedAt||0)-(w.startedAt||0))/1000)+'</div><div class="l">duration</div></div>'+
     '<div><div class="v">'+setsDone(w)+'</div><div class="l">sets</div></div>'+
-    '<div><div class="v">'+r0(volumeOf(w)).toLocaleString()+'</div><div class="l">'+U()+' volume</div></div></div>'+
+    '<div><div class="v">'+fmtVol(volumeOf(w))+'</div><div class="l">'+U()+' volume</div></div></div>'+
     (prs.length? '<h3 class="sec">New personal records</h3>'+prs.map(p=>
       '<div class="wrow"><span class="wn"><b>'+esc(p.name)+'</b><span>estimated 1RM</span></span>'+
-      '<span class="wv">'+r1(p.e1rm)+' '+U()+'</span></div>').join('')
-      : '<p class="note">No new records this session. Volume still counts.</p>');
+      '<span class="wv">'+r1(p.e1rm)+' '+U()+'</span></div>').join('') : '')+
+    '<h3 class="sec">What you lifted</h3>'+
+    (body || '<p class="note">No sets recorded.</p>')+
+    '<button class="btn" id="repeatwk">Repeat this session</button>'+
+    '<button class="btn ghost" id="delwk" style="color:var(--over)">Delete session</button>';
   openSheet('sheet-sum');
 }
+let openWorkout = null;
+
+/* ---------- full history ---------- */
+function openHistory(){
+  const ws = DB.lift.workouts.slice().sort((a,b)=>(b.endedAt||b.startedAt)-(a.endedAt||a.startedAt));
+  const el = document.getElementById('histbody');
+  if(!ws.length){ el.innerHTML='<p class="note">Nothing logged yet. Finish a session and it lands here.</p>'; }
+  else {
+    let out='', month='';
+    ws.forEach(w=>{
+      const d=new Date(w.endedAt||w.startedAt);
+      const m=d.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+      if(m!==month){ out+='<div class="hmonth">'+m+'</div>'; month=m; }
+      out+=workoutRow(w);
+    });
+    const tot=ws.reduce((a,w)=>a+volumeOf(w),0);
+    el.innerHTML='<div class="figs c3"><div><div class="v">'+ws.length+'</div><div class="l">sessions</div></div>'+
+      '<div><div class="v">'+ws.reduce((a,w)=>a+setsDone(w),0)+'</div><div class="l">sets</div></div>'+
+      '<div><div class="v">'+fmtVol(tot)+'</div><div class="l">'+U()+' lifted</div></div></div>'+out;
+  }
+  openSheet('sheet-hist');
+}
+
 
 /* ---------- rest timer ---------- */
 function startRest(sec){
@@ -1873,7 +1960,7 @@ function renderLiftTrends(){
   const tot=ws.reduce((a,w)=>a+volumeOf(w),0);
   el.innerHTML =
     '<div class="stats-row"><div class="stat"><div class="v">'+ws.length+'</div><div class="l">sessions</div></div>'+
-    '<div class="stat"><div class="v">'+r0(tot/1000)+'k</div><div class="l">'+U()+' lifted</div></div>'+
+    '<div class="stat"><div class="v">'+fmtVol(tot)+'</div><div class="l">'+U()+' lifted</div></div>'+
     '<div class="stat"><div class="v">'+ws.reduce((a,w)=>a+setsDone(w),0)+'</div><div class="l">sets</div></div></div>'+
     '<h3 class="sec">Weekly volume</h3>'+bars+chart+
     '<h3 class="sec">All sessions</h3>'+ws.slice().reverse().map(w=>workoutRow(w)).join('');
@@ -1910,7 +1997,7 @@ function renderLibrary(){
 
 /* ---------- lift event wiring ---------- */
 document.addEventListener('click', e=>{
-  const t=e.target.closest('[data-startr],[data-editr],[data-delr],[data-tick],[data-addset],[data-rmset],[data-exrm],[data-wk],[data-ritem],[data-exf],[data-pickex],[data-unit],[data-delex],#quickstart,#newroutine,#finishwk,#cancelwk,#addexercise,#raddex,#rsave,#restskip,#restplus');
+  const t=e.target.closest('[data-startr],[data-editr],[data-delr],[data-tick],[data-addset],[data-rmset],[data-exrm],[data-wk],[data-ritem],[data-exf],[data-pickex],[data-unit],[data-delex],#quickstart,#newroutine,#finishwk,#cancelwk,#addexercise,#raddex,#rsave,#restskip,#restplus,#allsessions,#repeatwk,#delwk');
   if(!t) return;
   const L=DB.lift;
 
@@ -1948,7 +2035,26 @@ document.addEventListener('click', e=>{
   if(t.id==='restplus'){ if(L.rest){ L.rest.endsAt+=30000; L.rest.total+=30; save(); drawRest(); } return; }
 
   if(t.dataset.wk){
-    const w=L.workouts.find(x=>x.id===t.dataset.wk); if(w) showSummary(w,[]); return; }
+    const w=L.workouts.find(x=>x.id===t.dataset.wk);
+    if(w){ if(document.getElementById('sheet-hist').classList.contains('on')){ closeSheets(); setTimeout(()=>showSummary(w,[]),220); } else showSummary(w,[]); }
+    return; }
+  if(t.id==='allsessions'){ openHistory(); return; }
+  if(t.id==='repeatwk'){
+    const w=L.workouts.find(x=>x.id===openWorkout); if(!w) return;
+    if(L.active && !confirm('You have a session running. Replace it?')) return;
+    L.active={ id:uid(), name:w.name, startedAt:Date.now(),
+      entries:(w.entries||[]).map(en=>({exerciseId:en.exerciseId,
+        sets:en.sets.map(()=>({weight:'',reps:'',done:false}))})) };
+    save(); closeSheets(); view='train';
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.v==='train'));
+    ['today','train','trends','set'].forEach(v=>document.getElementById('v-'+v).classList.toggle('hide',v!=='train'));
+    render(); window.scrollTo(0,0); toast('Session started from '+w.name);
+    return; }
+  if(t.id==='delwk'){
+    L.workouts=L.workouts.filter(x=>x.id!==openWorkout);
+    save(); closeSheets(); renderTrain();
+    if(view==='trends') renderLiftTrends();
+    toast('Session deleted'); return; }
 
   if(t.dataset.ritem!==undefined && t.dataset.ritem!==''){
     editRoutine.items.splice(+t.dataset.ritem,1); renderRoutineEditor(); return; }
