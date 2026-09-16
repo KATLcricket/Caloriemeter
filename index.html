@@ -355,16 +355,20 @@ details summary::-webkit-details-marker{display:none}
 }
 .scrim.on{opacity:1;pointer-events:auto}
 .sheet{
-  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  position:fixed;left:0;right:0;z-index:50;
+  bottom:var(--kb,0px);
   background:var(--bg);
   border-radius:22px 22px 0 0;
-  max-height:90vh;
+  max-height:88vh;
+  max-height:88dvh;
+  height:var(--sheet-h,auto);
   display:flex;flex-direction:column;
   transform:translateY(101%);
   transition:transform .24s cubic-bezier(.32,.82,.4,1);
-  padding-bottom:env(safe-area-inset-bottom);
+  padding-bottom:var(--sheet-pad,env(safe-area-inset-bottom));
   box-shadow:0 -2px 32px rgba(0,0,0,.18)
 }
+body.sheet-open{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 .sheet.on{transform:translateY(0)}
 .grip{
   width:36px;height:4px;border-radius:99px;
@@ -383,8 +387,17 @@ details summary::-webkit-details-marker{display:none}
 .sheet-b{
   overflow-y:auto;overflow-x:hidden;
   padding:14px 18px 24px;
-  -webkit-overflow-scrolling:touch;flex:1;min-height:0
+  -webkit-overflow-scrolling:touch;
+  flex:1 1 auto;min-height:0;overscroll-behavior:contain
 }
+/* search + filters pinned while results scroll under */
+.pick-top{
+  position:sticky;top:0;z-index:3;
+  background:var(--bg);
+  margin:-14px -18px 0;
+  padding:14px 18px 10px
+}
+.pick-top .chips:empty{display:none}
 
 /* food search sheet */
 .search{
@@ -725,9 +738,11 @@ nav{
     <button class="x" data-close>Done</button>
   </div>
   <div class="sheet-b">
-    <input class="search" id="q" placeholder="Search 198 foods…" autocomplete="off" autocorrect="off" spellcheck="false">
-    <div class="chips" id="filters"></div>
-    <div class="chips" id="recents"></div>
+    <div class="pick-top">
+      <input class="search" id="q" placeholder="Search 198 foods…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+      <div class="chips" id="filters"></div>
+      <div class="chips" id="recents"></div>
+    </div>
     <div class="res" id="results"></div>
   </div>
 </div>
@@ -904,7 +919,9 @@ function openPick(meal){
   document.getElementById('q').value=''; filter='All';
   renderFilters(); renderRecents(); search('');
   openSheet('sheet-pick');
-  setTimeout(()=>document.getElementById('q').focus(),250);
+  const inp = document.getElementById('q');
+  setTimeout(()=>{ inp.focus({preventScroll:true}); fitSheets(); }, 300);
+  setTimeout(fitSheets, 600);
 }
 function renderFilters(){
   const types=['All','Veg','NV','Egg','Fruit','Mine'];
@@ -955,9 +972,49 @@ function updPreview(){
 }
 
 /* ---------- sheets ---------- */
-function openSheet(id){ document.getElementById('scrim').classList.add('on'); document.getElementById(id).classList.add('on'); }
-function closeSheets(){ document.getElementById('scrim').classList.remove('on');
-  document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on')); }
+const vv = window.visualViewport;
+let lockY = 0, sheetOpen = false;
+
+function fitSheets(){
+  const root = document.documentElement;
+  if(!vv){ root.style.setProperty('--kb','0px'); return; }
+  // how much of the layout viewport the keyboard is covering
+  const kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+  root.style.setProperty('--kb', kb+'px');
+  // when the keyboard is up, drop the safe-area padding — it sits behind the keyboard
+  root.style.setProperty('--sheet-pad', kb > 0 ? '0px' : 'env(safe-area-inset-bottom)');
+  document.querySelectorAll('.sheet.on').forEach(el=>{
+    el.style.maxHeight = Math.max(260, Math.round(vv.height) - 24) + 'px';
+  });
+}
+if(vv){ vv.addEventListener('resize', fitSheets); vv.addEventListener('scroll', fitSheets); }
+
+function openSheet(id){
+  if(!sheetOpen){
+    lockY = window.scrollY || 0;
+    document.body.style.top = (-lockY)+'px';
+    document.body.classList.add('sheet-open');
+    sheetOpen = true;
+  }
+  document.getElementById('scrim').classList.add('on');
+  document.getElementById(id).classList.add('on');
+  const b = document.getElementById(id).querySelector('.sheet-b');
+  if(b) b.scrollTop = 0;
+  fitSheets();
+}
+function closeSheets(){
+  document.getElementById('scrim').classList.remove('on');
+  document.querySelectorAll('.sheet').forEach(s=>{ s.classList.remove('on'); s.style.maxHeight=''; });
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  if(sheetOpen){
+    document.body.classList.remove('sheet-open');
+    document.body.style.top = '';
+    window.scrollTo(0, lockY);
+    sheetOpen = false;
+  }
+  document.documentElement.style.setProperty('--kb','0px');
+  document.documentElement.style.setProperty('--sheet-pad','env(safe-area-inset-bottom)');
+}
 let tmr; function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on');
   clearTimeout(tmr); tmr=setTimeout(()=>t.classList.remove('on'),1600); }
 
@@ -1005,7 +1062,9 @@ document.addEventListener('click', e=>{
 });
 
 document.getElementById('scrim').onclick=closeSheets;
-document.getElementById('q').oninput=e=>search(e.target.value);
+document.getElementById('q').oninput=e=>{ search(e.target.value); document.getElementById('results').scrollTop=0; };
+document.getElementById('q').addEventListener('focus',()=>setTimeout(fitSheets,150));
+document.getElementById('qv').addEventListener('focus',()=>setTimeout(fitSheets,150));
 document.getElementById('qv').oninput=updPreview;
 document.getElementById('minus').onclick=()=>{ const i=document.getElementById('qv');
   const st=pending.u==='g'?5:pending.u==='ml'?10:0.5; i.value=Math.max(0,(parseFloat(i.value)||0)-st); updPreview(); };
