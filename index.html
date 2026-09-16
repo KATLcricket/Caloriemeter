@@ -164,6 +164,7 @@ header{position:sticky;top:0;z-index:20;background:var(--bg)}
 
 /* ── LEDGER ── */
 .ledger-wrap{padding:16px 16px 0;max-width:520px;margin:0 auto}
+#waterslot .dcard{margin-top:12px}
 #meals .ledger{
   background:var(--surface);
   border:1.5px solid var(--line);
@@ -538,6 +539,16 @@ nav{
   font-family:var(--disp);font-weight:700;font-size:14px
 }
 
+.bdrow{
+  display:flex;align-items:center;gap:8px;margin-top:10px;
+  font-size:12px;opacity:.9
+}
+.bdrow input{
+  width:62px;padding:7px 8px;border-radius:9px;text-align:center;
+  border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.14);
+  color:#fff;font-family:var(--disp);font-weight:700;font-size:14px;
+  -webkit-appearance:none;appearance:none;outline:none
+}
 .ex{
   background:var(--surface);border:1.5px solid var(--line);
   border-radius:16px;margin-top:10px;overflow:hidden;min-width:0
@@ -683,6 +694,79 @@ nav{
 }
 .hmonth:first-child{margin-top:4px}
 
+/* ══════════════ DASHBOARD ══════════════ */
+.dash{padding:8px 16px 0;max-width:520px;margin:0 auto}
+.gauges{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.gauge{
+  background:var(--surface);border:1.5px solid var(--line);
+  border-radius:16px;padding:12px 6px 11px;text-align:center;min-width:0
+}
+.gauge .ring{width:66px;height:66px;margin:0 auto;position:relative}
+.gauge svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.gauge circle{fill:none;stroke-linecap:round}
+.gauge .gt{stroke:var(--raised)}
+.gauge .pct{
+  position:absolute;inset:0;display:grid;place-content:center;
+  font-family:var(--disp);font-size:14px;font-weight:700;
+  font-variant-numeric:tabular-nums
+}
+.gauge .gl{font-size:11px;color:var(--ink-3);margin-top:7px}
+.gauge .gv{
+  font-family:var(--disp);font-size:13px;font-weight:700;
+  margin-top:1px;font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+
+.dcard{
+  background:var(--surface);border:1.5px solid var(--line);
+  border-radius:18px;padding:14px 15px;margin-top:11px;min-width:0
+}
+.dcard-h{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;min-width:0}
+.dcard-h h4{font-family:var(--disp);font-size:13.5px;font-weight:700;flex:1;min-width:0}
+.dcard-h .hint{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;flex:0 0 auto}
+
+/* water */
+.glasses{display:flex;flex-wrap:wrap;gap:7px}
+.glass{
+  width:26px;height:34px;border-radius:4px 4px 8px 8px;
+  border:1.5px solid var(--line);background:var(--raised);
+  position:relative;overflow:hidden;flex:0 0 auto
+}
+.glass i{
+  position:absolute;left:0;right:0;bottom:0;
+  background:#2E8BC0;display:block;transition:height .2s
+}
+.glass.on{border-color:#2E8BC0}
+.wateract{display:flex;gap:8px;margin-top:12px}
+.wateract button{
+  flex:1;padding:10px;border-radius:11px;font-size:13px;font-weight:600;
+  background:var(--raised);border:1.5px solid var(--line);color:var(--ink-2)
+}
+.wateract button.main{background:#2E8BC0;border-color:#2E8BC0;color:#fff}
+
+/* macro split strip */
+.msplit{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--raised)}
+.msplit span{display:block;height:100%}
+.mlegend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
+.mlegend div{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-3)}
+
+/* 7-day strip */
+.wk{margin-top:12px}
+.wkrow{display:flex;align-items:center;gap:8px;margin-top:9px;min-width:0}
+.wkrow .wl{width:58px;font-size:11px;color:var(--ink-3);flex:0 0 auto}
+.wkbars{flex:1;display:flex;gap:4px;align-items:flex-end;height:34px;min-width:0}
+.wkbars div{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.wkbars i{display:block;border-radius:3px;min-height:2px}
+.wkdays{display:flex;gap:4px;margin:5px 0 0 66px}
+.wkdays span{flex:1;text-align:center;font-size:9.5px;color:var(--ink-3);min-width:0}
+
+.empty-dash{font-size:12.5px;color:var(--ink-3);line-height:1.55}
+
+/* new-exercise form inside the picker */
+#newexform{
+  border-top:1.5px solid var(--line);margin-top:12px;padding-top:4px
+}
+
 </style>
 </head>
 <body>
@@ -703,8 +787,14 @@ nav{
 
 <main>
 
+  <!-- ── DASHBOARD ── -->
+  <section id="v-home">
+    <div class="dash" id="dashbody"></div>
+    <div style="height:18px"></div>
+  </section>
+
   <!-- ── TODAY ── -->
-  <section id="v-today">
+  <section id="v-today" class="hide">
     <div class="hero">
       <div class="plate-area">
         <div class="plate">
@@ -747,6 +837,7 @@ nav{
 
     <div class="ledger-wrap">
       <div id="meals"></div>
+      <div id="waterslot"></div>
     </div>
     <div style="height:18px"></div>
   </section>
@@ -881,6 +972,16 @@ nav{
           <input id="tf2" class="cv" type="number" inputmode="numeric">
           <span class="cu">g</span>
         </div>
+        <div class="cell">
+          <label for="tw">Water</label>
+          <input id="tw" class="cv" type="number" inputmode="numeric">
+          <span class="cu">ml</span>
+        </div>
+        <div class="cell">
+          <label for="tset">Sets a day</label>
+          <input id="tset" class="cv" type="number" inputmode="numeric">
+          <span class="cu">sets</span>
+        </div>
       </div>
       <p class="note" id="macrosum"></p>
       <button class="btn" id="savet">Save targets</button>
@@ -969,7 +1070,8 @@ nav{
 </div>
 
 <nav><div class="tabs">
-  <button class="tab on" data-v="today"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/></svg></span><span class="tlabel">Food</span></button>
+  <button class="tab on" data-v="home"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v8.5l6 4.2"/></svg></span><span class="tlabel">Home</span></button>
+  <button class="tab" data-v="today"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/></svg></span><span class="tlabel">Food</span></button>
   <button class="tab" data-v="train"><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></svg></span><span class="tlabel">Train</span></button>
   <button class="tab" data-v="trends"><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M8 19v-6M12.5 19V9M17 19v-4M21 19H4"/></svg></span><span class="tlabel">Trends</span></button>
   <button class="tab" data-v="set"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6M18.4 18.4l-1.6-1.6M7.2 7.2L5.6 5.6"/></svg></span><span class="tlabel">Settings</span></button>
@@ -1037,6 +1139,18 @@ nav{
       <div class="chips" id="exfilters"></div>
     </div>
     <div class="res" id="exresults"></div>
+    <div id="newexform" class="hide">
+      <label class="fl" for="nex2">New exercise name</label>
+      <input class="in" id="nex2" placeholder="e.g. Trap Bar Deadlift">
+      <div class="row2" style="margin-top:10px">
+        <div><label class="fl" for="nexg2">Muscle group</label>
+          <select class="in" id="nexg2"><option>Legs</option><option>Chest</option><option>Back</option><option>Shoulders</option><option>Arms</option><option>Core</option></select></div>
+        <div><label class="fl" for="nexe2">Equipment</label>
+          <select class="in" id="nexe2"><option>Barbell</option><option>Dumbbell</option><option>Machine</option><option>Cable</option><option>Bodyweight</option></select></div>
+      </div>
+      <button class="btn" id="savex2">Create and add</button>
+    </div>
+    <button class="btn ghost" id="newextoggle">New exercise</button>
   </div>
 </div>
 
@@ -1079,8 +1193,8 @@ const store = {
   }
 };
 
-let DB = { settings:{k:2200,p:160,c:245,f:63}, days:{}, custom:[], recent:[] };
-let cur = todayKey(), view='today', pickMeal=null, pending=null, editRef=null, filter='All';
+let DB = { settings:{k:2200,p:160,c:245,f:63,water:3000,sets:20}, days:{}, custom:[], recent:[] };
+let cur = todayKey(), view='home', pickMeal=null, pending=null, editRef=null, filter='All';
 
 function todayKey(d){ d = d||new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function shift(key,n){ const [y,m,d]=key.split('-').map(Number); const dt=new Date(y,m-1,d+n); return todayKey(dt); }
@@ -1111,7 +1225,8 @@ function render(){
   document.getElementById('dsub').textContent = subDate(cur);
   document.getElementById('jump').classList.toggle('hide', cur===todayKey());
   document.getElementById('next').disabled = cur >= todayKey();
-  document.querySelector('header').classList.toggle('hide', view!=='today');
+  document.querySelector('header').classList.toggle('hide', !(view==='today'||view==='train'||view==='home'));
+  if(view==='home') renderHome();
   if(view==='today') renderToday();
   if(view==='train') renderTrain();
   if(view==='trends'){ renderTrends(); renderLiftTrends(); }
@@ -1162,6 +1277,8 @@ function renderToday(){
       '</button>'+
     '</section>';
   }).join('');
+
+  document.getElementById('waterslot').innerHTML = waterCardHTML();
 }
 
 function renderTrends(){
@@ -1340,7 +1457,7 @@ document.addEventListener('click', e=>{
   if(t.classList.contains('tab')){
     view=t.dataset.v;
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
-    ['today','train','trends','set'].forEach(v=>document.getElementById('v-'+v).classList.toggle('hide',v!==view));
+    ['home','today','train','trends','set'].forEach(v=>document.getElementById('v-'+v).classList.toggle('hide',v!==view));
     render(); window.scrollTo(0,0);
   }
 });
@@ -1377,7 +1494,8 @@ document.getElementById('jump').onclick=()=>{ cur=todayKey(); render(); };
 /* settings */
 function fillSettings(){
   const s=DB.settings;
-  tk.value=s.k; tp2.value=s.p; tc2.value=s.c; tf2.value=s.f; macroSum();
+  tk.value=s.k; tp2.value=s.p; tc2.value=s.c; tf2.value=s.f;
+  tw.value=s.water||3000; tset.value=s.sets||20; macroSum();
 }
 function macroSum(){
   const k=(+tp2.value||0)*4+(+tc2.value||0)*4+(+tf2.value||0)*9;
@@ -1385,7 +1503,8 @@ function macroSum(){
 }
 ['tp2','tc2','tf2'].forEach(id=>document.getElementById(id).addEventListener('input',macroSum));
 document.getElementById('savet').onclick=()=>{
-  DB.settings={k:+tk.value||2000,p:+tp2.value||0,c:+tc2.value||0,f:+tf2.value||0};
+  DB.settings={k:+tk.value||2000,p:+tp2.value||0,c:+tc2.value||0,f:+tf2.value||0,
+    water:+tw.value||3000, sets:+tset.value||20};
   save(); render(); toast('Targets saved');
 };
 ['cp','cc','cf'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{
@@ -1461,7 +1580,7 @@ document.getElementById('restorefile').onchange = function(){
 };
 document.getElementById('confirmrestore').onclick = async ()=>{
   if(!pendingRestore) return;
-  DB = Object.assign({settings:{k:2200,p:160,c:245,f:63},days:{},custom:[],recent:[]}, pendingRestore);
+  DB = Object.assign({settings:{k:2200,p:160,c:245,f:63,water:3000,sets:20},days:{},custom:[],recent:[]}, pendingRestore);
   const ok = await store.set(DB);
   pendingRestore = null;
   document.getElementById('confirmrestore').style.display='none';
@@ -1688,8 +1807,24 @@ function plateBreakdown(total, unit){
 /* ---------- train view ---------- */
 function renderTrain(){
   const L=DB.lift, el=document.getElementById('trainbody');
+  if(cur!==todayKey()){
+    if(L.active && L.active.forDate===cur){ el.innerHTML=activeHTML(L.active); return; }
+    const ws=sessionsOn(cur);
+    el.innerHTML='<h3 class="sec" style="margin-top:16px">'+fmtDate(cur)+'</h3>'+
+      (ws.length? ws.map(w=>workoutRow(w)).join('')
+        : '<p class="note">No session logged on this day.</p>')+
+      (L.active
+        ? '<p class="note">A session for '+(L.active.forDate? fmtDate(L.active.forDate):'today')+
+          ' is still open. Finish or discard it before logging another.</p>'
+        : '<h3 class="sec">Log a session for this day</h3>'+
+          '<button class="btn" id="quickstart" style="margin-top:0">Empty session</button>'+
+          L.routines.map(r=>'<button class="btn ghost" data-startr="'+r.id+'">'+esc(r.name)+'</button>').join(''))+
+      '<button class="btn ghost" id="backtoday" style="margin-top:18px">Back to today</button>'+
+      (L.workouts.length? '<button class="btn ghost" id="allsessions">View all '+L.workouts.length+' sessions</button>':'');
+    return;
+  }
   if(L.active){ el.innerHTML=activeHTML(L.active); return; }
-  const recent=L.workouts.slice(-3).reverse();
+  const recent=L.workouts.slice().sort((a,b)=>(b.endedAt||b.startedAt)-(a.endedAt||a.startedAt)).slice(0,3);
   el.innerHTML =
     '<h3 class="sec" style="margin-top:16px">Train</h3>'+
     '<button class="btn" id="quickstart" style="margin-top:0">Start empty session</button>'+
@@ -1720,10 +1855,14 @@ function workoutRow(w){
 function activeHTML(a){
   const el=(a.entries||[]);
   const vol=r0(volumeOf(a)), done=setsDone(a);
+  const bd=a.forDate;
   let html='<div class="live"><div class="lh"><div class="lname">'+esc(a.name)+'</div>'+
-    '<div class="clock" id="elapsed">0:00</div></div>'+
+    (bd? '<div class="clock" style="font-size:13px">'+fmtDate(bd)+'</div>'
+       : '<div class="clock" id="elapsed">0:00</div>')+'</div>'+
     '<div class="lstats"><span>'+done+' sets done</span><span>'+fmtVol(vol)+' '+U()+' volume</span></div>'+
-    '<button class="finish" id="finishwk">Finish session</button></div>';
+    (bd? '<div class="bdrow"><span>Took</span><input id="bdur" type="number" inputmode="numeric" value="'+
+         (a.mins||60)+'"><span>minutes</span></div>' : '')+
+    '<button class="finish" id="finishwk">'+(bd? 'Save session':'Finish session')+'</button></div>';
 
   html += el.map((en,ei)=>{
     const ex=exById(en.exerciseId)||{name:'Exercise',gear:''};
@@ -1764,9 +1903,12 @@ function platesHTML(sets){
 /* ---------- workout actions ---------- */
 function startWorkout(routine){
   const items = routine ? routine.items : [];
+  const back = cur!==todayKey() ? cur : null;
+  let startedAt = Date.now();
+  if(back){ const [y,m,d]=back.split('-').map(Number); startedAt = new Date(y,m-1,d,18,0,0).getTime(); }
   DB.lift.active = {
     id:uid(), name: routine? routine.name : 'Quick session',
-    startedAt: Date.now(),
+    startedAt: startedAt, forDate: back,
     entries: items.map(i=>({exerciseId:i.exerciseId,
       sets: Array.from({length:i.sets||3},()=>({weight:'',reps:'',done:false}))}))
   };
@@ -1778,7 +1920,12 @@ function finishWorkout(){
   a.entries = a.entries.map(en=>({exerciseId:en.exerciseId, sets:en.sets.filter(s=>s.done)}))
                        .filter(en=>en.sets.length);
   if(!a.entries.length){ DB.lift.active=null; DB.lift.rest=null; save(); renderTrain(); return toast('Session discarded — no sets logged'); }
-  a.endedAt = Date.now();
+  if(a.forDate){
+    const f=document.getElementById('bdur');
+    const mins = Math.max(1, +(f&&f.value) || 60);
+    a.mins = mins;
+    a.endedAt = a.startedAt + mins*60000;
+  } else a.endedAt = Date.now();
   const prs = a.entries.map(en=>{
     const best = bestE1rm(en.exerciseId, a.id);
     let mine=0; en.sets.forEach(s=>{ mine=Math.max(mine, e1rm(+s.weight||0,+s.reps||0)); });
@@ -1791,7 +1938,7 @@ function finishWorkout(){
 }
 function showSummary(w, prs){
   openWorkout = w.id;
-  const d = new Date(w.endedAt||w.startedAt);
+  const d = new Date(w.startedAt||w.endedAt);
   document.getElementById('sumttl').textContent = w.name;
   const stamp = d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'})+
     ' · '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
@@ -1895,6 +2042,8 @@ let pickTarget=null, exFilter='All';
 function openExPicker(target){
   pickTarget=target; exFilter='All';
   document.getElementById('exq').value='';
+  document.getElementById('newexform').classList.add('hide');
+  document.getElementById('newextoggle').textContent='New exercise';
   renderExFilters(); searchEx('');
   openSheet('sheet-expick');
 }
@@ -1997,7 +2146,7 @@ function renderLibrary(){
 
 /* ---------- lift event wiring ---------- */
 document.addEventListener('click', e=>{
-  const t=e.target.closest('[data-startr],[data-editr],[data-delr],[data-tick],[data-addset],[data-rmset],[data-exrm],[data-wk],[data-ritem],[data-exf],[data-pickex],[data-unit],[data-delex],#quickstart,#newroutine,#finishwk,#cancelwk,#addexercise,#raddex,#rsave,#restskip,#restplus,#allsessions,#repeatwk,#delwk');
+  const t=e.target.closest('[data-startr],[data-editr],[data-delr],[data-tick],[data-addset],[data-rmset],[data-exrm],[data-wk],[data-ritem],[data-exf],[data-pickex],[data-unit],[data-delex],#quickstart,#newroutine,#finishwk,#cancelwk,#addexercise,#raddex,#rsave,#restskip,#restplus,#allsessions,#repeatwk,#delwk,#backtoday,#newextoggle,#savex2');
   if(!t) return;
   const L=DB.lift;
 
@@ -2019,7 +2168,7 @@ document.addEventListener('click', e=>{
         if(s.reps==='' && p&&p[si]) s.reps=p[si].reps;
       }
     });
-    if(DB.lift.active.entries[ei].sets[si].done) startRest(120);
+    if(DB.lift.active.entries[ei].sets[si].done && !DB.lift.active.forDate) startRest(120);
     return;
   }
   if(t.dataset.addset!==undefined && t.dataset.addset!==''){
@@ -2039,6 +2188,38 @@ document.addEventListener('click', e=>{
     if(w){ if(document.getElementById('sheet-hist').classList.contains('on')){ closeSheets(); setTimeout(()=>showSummary(w,[]),220); } else showSummary(w,[]); }
     return; }
   if(t.id==='allsessions'){ openHistory(); return; }
+  if(t.id==='backtoday'){ cur=todayKey(); render(); return; }
+  if(t.id==='newextoggle'){
+    const f=document.getElementById('newexform');
+    f.classList.toggle('hide');
+    t.textContent = f.classList.contains('hide') ? 'New exercise' : 'Cancel';
+    if(!f.classList.contains('hide')){
+      const typed=document.getElementById('exq').value.trim();
+      if(typed) document.getElementById('nex2').value=typed;
+      document.getElementById('nex2').focus({preventScroll:true});
+      setTimeout(fitSheets,150);
+    }
+    return;
+  }
+  if(t.id==='savex2'){
+    const nm=document.getElementById('nex2').value.trim();
+    if(!nm) return toast('Give the exercise a name');
+    const ex={id:uid(), name:nm, group:document.getElementById('nexg2').value,
+              gear:document.getElementById('nexe2').value, custom:true};
+    L.exercises.push(ex); save();
+    document.getElementById('nex2').value='';
+    document.getElementById('newexform').classList.add('hide');
+    document.getElementById('newextoggle').textContent='New exercise';
+    if(pickTarget==='active'){
+      patchActive(a=>a.entries.push({exerciseId:ex.id,
+        sets:[{weight:'',reps:'',done:false},{weight:'',reps:'',done:false},{weight:'',reps:'',done:false}]}));
+      closeSheets();
+    } else {
+      editRoutine.items.push({exerciseId:ex.id, sets:3, reps:'8-10'});
+      renderRoutineEditor(); closeSheets(); setTimeout(()=>openSheet('sheet-routine'),220);
+    }
+    toast(nm+' created'); return;
+  }
   if(t.id==='repeatwk'){
     const w=L.workouts.find(x=>x.id===openWorkout); if(!w) return;
     if(L.active && !confirm('You have a session running. Replace it?')) return;
@@ -2047,7 +2228,7 @@ document.addEventListener('click', e=>{
         sets:en.sets.map(()=>({weight:'',reps:'',done:false}))})) };
     save(); closeSheets(); view='train';
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.v==='train'));
-    ['today','train','trends','set'].forEach(v=>document.getElementById('v-'+v).classList.toggle('hide',v!=='train'));
+    ['home','today','train','trends','set'].forEach(v=>document.getElementById('v-'+v).classList.toggle('hide',v!=='train'));
     render(); window.scrollTo(0,0); toast('Session started from '+w.name);
     return; }
   if(t.id==='delwk'){
@@ -2097,6 +2278,7 @@ document.addEventListener('input', e=>{
     DB.lift.active.entries[ei].sets[si].reps=t.value; save(); return; }
   if(t.dataset.rsets!==undefined && t.dataset.rsets){ editRoutine.items[+t.dataset.rsets].sets=+t.value||3; return; }
   if(t.dataset.rreps!==undefined && t.dataset.rreps){ editRoutine.items[+t.dataset.rreps].reps=t.value; return; }
+  if(t.id==='bdur'){ if(DB.lift.active) DB.lift.active.mins=+t.value||60; return; }
   if(t.id==='exq'){ searchEx(t.value); return; }
   if(t.id==='liftexsel'){ liftEx=t.value; renderLiftTrends(); return; }
 });
@@ -2132,6 +2314,117 @@ document.addEventListener('click', e=>{
       gear:document.getElementById('nexe').value, custom:true});
     document.getElementById('nex').value='';
     save(); renderLibrary(); toast(nm+' added');
+  }
+});
+
+/* ══════════════════════ DASHBOARD + WATER ══════════════════════ */
+const GLASS = 250;
+function waterOf(k){ return (DB.water||{})[k]||0; }
+function setWater(k, ml){
+  DB.water = DB.water||{};
+  DB.water[k] = Math.max(0, Math.round(ml));
+  if(!DB.water[k]) delete DB.water[k];
+  save(); render();
+}
+function sessionsOn(k){
+  return (DB.lift.workouts||[]).filter(w=>todayKey(new Date(w.endedAt||w.startedAt))===k);
+}
+function gauge(pct, colour, big, label, value){
+  const R=28, C=2*Math.PI*R, p=Math.min(pct,1);
+  return '<div class="gauge"><div class="ring"><svg viewBox="0 0 66 66">'+
+    '<circle class="gt" cx="33" cy="33" r="'+R+'" stroke-width="7"/>'+
+    '<circle cx="33" cy="33" r="'+R+'" stroke-width="7" stroke="'+colour+'" '+
+    'stroke-dasharray="'+(p*C).toFixed(1)+' '+C.toFixed(1)+'"'+(p?'':' opacity=".15"')+'/>'+
+    '</svg><div class="pct" style="color:'+colour+'">'+big+'</div></div>'+
+    '<div class="gl">'+label+'</div><div class="gv">'+value+'</div></div>';
+}
+
+function waterCardHTML(){
+  const wml=waterOf(cur), wgoal=DB.settings.water||3000;
+  const n=Math.max(1,Math.round(wgoal/GLASS)), filled=Math.floor(wml/GLASS);
+  const part=(wml%GLASS)/GLASS;
+  let glasses='';
+  for(let i=0;i<n;i++){
+    const h = i<filled ? 100 : (i===filled ? part*100 : 0);
+    glasses+='<button class="glass'+(h>0?' on':'')+'" data-glass="'+i+'" aria-label="Glass '+(i+1)+'"><i style="height:'+h+'%"></i></button>';
+  }
+  return '<div class="dcard"><div class="dcard-h"><h4>Water</h4>'+
+    '<span class="hint">'+wml+' / '+wgoal+' ml</span></div>'+
+    '<div class="glasses">'+glasses+'</div>'+
+    '<div class="wateract"><button data-wadd="-250">&minus; glass</button>'+
+    '<button class="main" data-wadd="250">+ 250 ml</button>'+
+    '<button data-wadd="500">+ 500 ml</button></div></div>';
+}
+
+function renderHome(){
+  const s=DB.settings, list=entries(cur), t=totals(list);
+  const wml=waterOf(cur), wgoal=s.water||3000;
+  const ws=sessionsOn(cur);
+  const sets=ws.reduce((a,w)=>a+setsDone(w),0);
+  const vol=ws.reduce((a,w)=>a+volumeOf(w),0);
+  const setGoal=s.sets||20;
+
+  let html='<div class="gauges">'+
+    gauge(t.k/Math.max(s.k,1), 'var(--accent)', Math.round(t.k/Math.max(s.k,1)*100)+'%', 'Food', r0(t.k)+' / '+s.k)+
+    gauge(wml/wgoal, '#2E8BC0', Math.round(wml/wgoal*100)+'%', 'Water', (wml/1000).toFixed(1)+' / '+(wgoal/1000).toFixed(1)+'L')+
+    gauge(sets/setGoal, 'var(--fat)', sets? sets : '–', 'Train', ws.length? fmtVol(vol)+' '+U() : 'no session')+
+  '</div>';
+
+  /* macros */
+  const kp=t.p*4, kc=t.c*4, kf=t.f*9, tot=Math.max(kp+kc+kf,1);
+  html+='<div class="dcard"><div class="dcard-h"><h4>Macros</h4>'+
+    '<span class="hint">'+r0(t.k)+' of '+s.k+' kcal</span></div>'+
+    '<div class="msplit"><span style="background:var(--pro);width:'+(kp/tot*100)+'%"></span>'+
+    '<span style="background:var(--carb);width:'+(kc/tot*100)+'%"></span>'+
+    '<span style="background:var(--fat);width:'+(kf/tot*100)+'%"></span></div>'+
+    '<div class="mlegend">'+
+      '<div><i class="dot" style="background:var(--pro)"></i>Protein '+r0(t.p)+' / '+s.p+'g</div>'+
+      '<div><i class="dot" style="background:var(--carb)"></i>Carbs '+r0(t.c)+' / '+s.c+'g</div>'+
+      '<div><i class="dot" style="background:var(--fat)"></i>Fat '+r0(t.f)+' / '+s.f+'g</div>'+
+    '</div></div>';
+
+  /* water */
+  html += waterCardHTML();
+
+  /* training */
+  html+='<div class="dcard"><div class="dcard-h"><h4>Training</h4>'+
+    '<span class="hint">'+(ws.length? sets+' sets · '+fmtVol(vol)+' '+U() : '—')+'</span></div>'+
+    (ws.length? ws.map(w=>workoutRow(w)).join('')
+      : '<p class="empty-dash">'+(cur===todayKey()
+          ? 'Nothing logged yet today. Start a session from the Train tab.'
+          : 'No session on this day.')+'</p>')+
+    (DB.lift.active && cur===todayKey()
+      ? '<p class="empty-dash" style="margin-top:8px">A session is running right now — '+esc(DB.lift.active.name)+'.</p>' : '')+
+  '</div>';
+
+  /* last 7 days */
+  const days=[]; for(let i=6;i>=0;i--) days.push(shift(cur,-i));
+  const kcals=days.map(d=>totals(entries(d)).k);
+  const waters=days.map(d=>waterOf(d));
+  const vols=days.map(d=>sessionsOn(d).reduce((a,w)=>a+volumeOf(w),0));
+  const mx=a=>Math.max(...a,1);
+  const bars=(arr,colour,max)=>'<div class="wkbars">'+arr.map(v=>
+    '<div><i style="height:'+(v/max*100)+'%;background:'+(v?colour:'var(--raised)')+'"></i></div>').join('')+'</div>';
+  html+='<div class="dcard wk"><div class="dcard-h"><h4>Last 7 days</h4></div>'+
+    '<div class="wkrow"><span class="wl">Calories</span>'+bars(kcals,'var(--accent)',Math.max(mx(kcals),s.k))+'</div>'+
+    '<div class="wkrow"><span class="wl">Water</span>'+bars(waters,'#2E8BC0',Math.max(mx(waters),wgoal))+'</div>'+
+    '<div class="wkrow"><span class="wl">Volume</span>'+bars(vols,'var(--fat)',mx(vols))+'</div>'+
+    '<div class="wkdays">'+days.map(d=>{
+      const [y,m,dd]=d.split('-').map(Number);
+      return '<span>'+new Date(y,m-1,dd).toLocaleDateString(undefined,{weekday:'narrow'})+'</span>';
+    }).join('')+'</div></div>';
+
+  document.getElementById('dashbody').innerHTML = html;
+}
+
+document.addEventListener('click', e=>{
+  const t=e.target.closest('[data-wadd],[data-glass]');
+  if(!t) return;
+  if(t.dataset.wadd){ setWater(cur, waterOf(cur)+ (+t.dataset.wadd)); return; }
+  if(t.dataset.glass!==undefined){
+    const i=+t.dataset.glass, cur_ml=waterOf(cur);
+    // tapping the last filled glass empties it, otherwise fill up to that glass
+    setWater(cur, cur_ml===(i+1)*GLASS ? i*GLASS : (i+1)*GLASS);
   }
 });
 
