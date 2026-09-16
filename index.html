@@ -8,7 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0B5738" media="(prefers-color-scheme:light)">
 <meta name="theme-color" content="#0A100D" media="(prefers-color-scheme:dark)">
-<title>Macro Log</title>
+<title>Calorie Meter</title>
+<meta name="apple-mobile-web-app-title" content="Calorie Meter">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
@@ -30,7 +31,7 @@
   --body:-apple-system,'Helvetica Neue',Roboto,sans-serif;
 }
 @media(prefers-color-scheme:dark){
-  :root{
+  :root:not([data-theme="light"]){
     --bg:#090E0C;
     --surface:#111815;
     --raised:#182320;
@@ -44,6 +45,20 @@
     --accent:#2DB872;
     --over:#E05840;
   }
+}
+:root[data-theme="dark"]{
+    --bg:#090E0C;
+    --surface:#111815;
+    --raised:#182320;
+    --ink:#E0EAE4;
+    --ink-2:#8AA49C;
+    --ink-3:#4E6460;
+    --line:#1B2824;
+    --pro:#F07240;
+    --carb:#D89E28;
+    --fat:#9E7ADE;
+    --accent:#2DB872;
+    --over:#E05840;
 }
 *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{overflow-x:hidden;overflow-x:clip}
@@ -66,9 +81,22 @@ h1,h2,h3,h4{font-family:var(--disp);margin:0;letter-spacing:-.02em}
 /* ── GREETING ── */
 .greet{
   max-width:520px;margin:0 auto;
-  padding:18px 16px 2px;
-  display:flex;align-items:baseline;gap:8px;min-width:0
+  padding:16px 16px 2px;
+  display:flex;align-items:center;gap:10px;min-width:0
 }
+.clockbox{flex:0 0 auto;text-align:right;line-height:1.15}
+.clockbox .now{
+  font-family:var(--disp);font-size:15px;font-weight:700;
+  font-variant-numeric:tabular-nums;display:block;letter-spacing:-.01em
+}
+.clockbox .nowd{font-size:10.5px;color:var(--ink-3);display:block}
+.themebtn{
+  flex:0 0 auto;width:34px;height:34px;border-radius:11px;
+  border:1.5px solid var(--line);background:var(--surface);
+  display:grid;place-items:center;color:var(--ink-2)
+}
+.themebtn svg{width:17px;height:17px;stroke:currentColor;fill:none;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .greet h2{
   font-family:var(--disp);font-size:21px;font-weight:800;
   letter-spacing:-.025em;line-height:1.2;flex:1;min-width:0;
@@ -773,7 +801,8 @@ nav{
 
 <div class="greet">
   <h2 id="greeting">Welcome, Vishal</h2>
-  <span class="stamp" id="stamp"></span>
+  <div class="clockbox"><span class="now" id="stamp">--:--</span><span class="nowd" id="stampd"></span></div>
+  <button class="themebtn" id="themebtn" aria-label="Switch between day and night"></button>
 </div>
 
 <header>
@@ -1012,6 +1041,14 @@ nav{
       <p class="note-sm" id="ckcal">Calories are worked out from the macros you enter.</p>
       <button class="btn" id="savec">Add food</button>
       <div id="customlist"></div>
+
+      <h3 class="sec">Appearance</h3>
+      <div class="seg" id="themeseg">
+        <button data-theme="auto">Auto</button>
+        <button data-theme="light">Day</button>
+        <button data-theme="dark">Night</button>
+      </div>
+      <p class="note">Auto follows your iPhone's display setting.</p>
 
       <!-- EXERCISE LIBRARY -->
       <h3 class="sec">Exercise library</h3>
@@ -1533,12 +1570,12 @@ function dlFile(content, filename, mime){
 document.getElementById('backup').onclick = async ()=>{
   const payload = {
     _version: 1,
-    _app: 'macro-log',
+    _app: 'calorie-meter',
     _exported: new Date().toISOString(),
     data: DB
   };
   const json = JSON.stringify(payload, null, 2);
-  const fname = 'macro-log-'+isoNow()+'.json';
+  const fname = 'calorie-meter-'+isoNow()+'.json';
   dlFile(json, fname, 'application/json');
   // show day count so user knows what they backed up
   const ndays = Object.keys(DB.days||{}).filter(d=>(DB.days[d]||[]).length>0).length;
@@ -1559,8 +1596,8 @@ document.getElementById('restorefile').onchange = function(){
     pendingRestore = null; btn.style.display='none'; info.textContent='';
     try{
       const obj = JSON.parse(e.target.result);
-      if(obj._app !== 'macro-log' || !obj.data)
-        throw new Error('This does not look like a Macro Log backup file.');
+      if((obj._app !== 'calorie-meter' && obj._app !== 'macro-log') || !obj.data)
+        throw new Error('This does not look like a Calorie Meter backup file.');
       const d = obj.data;
       const ndays = Object.keys(d.days||{}).filter(k=>(d.days[k]||[]).length>0).length;
       const ncust = (d.custom||[]).length;
@@ -1585,7 +1622,7 @@ document.getElementById('confirmrestore').onclick = async ()=>{
   pendingRestore = null;
   document.getElementById('confirmrestore').style.display='none';
   document.getElementById('restoreinfo').textContent = '';
-  initLift(); fillSettings(); fillProfile(); showBF(); renderCustom(); render(); drawRest();
+  initLift(); applyTheme(); fillSettings(); fillProfile(); showBF(); renderCustom(); render(); drawRest();
   toast(ok ? 'Restored successfully' : 'Restored (storage not saved — see Settings)');
 };
 
@@ -1594,7 +1631,7 @@ document.getElementById('export').onclick=()=>{
   Object.keys(DB.days).sort().forEach(d=>entries(d).forEach(e=>
     rows.push([d,e.meal,e.n,trimNum(e.qty),e.u,r1(e.p),r1(e.c),r1(e.f),r0(e.k)])));
   const csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
-  dlFile(csv, 'macro-log-'+isoNow()+'.csv', 'text/csv');
+  dlFile(csv, 'calorie-meter-'+isoNow()+'.csv', 'text/csv');
   toast('CSV downloaded');
 };
 
@@ -1701,14 +1738,56 @@ P('usebf').onclick=()=>{
   P('pbf').value=r1(r.bf); showCalc(); toast('Body fat set to '+r1(r.bf)+'%');
 };
 
-/* ---------- greeting ---------- */
-(function(){
-  const h = new Date().getHours();
+/* ---------- greeting, live clock, day / night ---------- */
+const SUN='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M22 12h-2.4M4.4 12H2M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7M19.1 19.1l-1.7-1.7M6.6 6.6L4.9 4.9"/></svg>';
+const MOON='<svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>';
+const AUTOI='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17z" fill="currentColor" stroke="none"/></svg>';
+
+function sysDark(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
+function applyTheme(){
+  const mode = (DB.settings && DB.settings.theme) || 'auto';
+  const root = document.documentElement;
+  if(mode==='auto') root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme', mode);
+  const btn = document.getElementById('themebtn');
+  if(btn) btn.innerHTML = mode==='auto' ? AUTOI : mode==='dark' ? MOON : SUN;
+  const seg = document.getElementById('themeseg');
+  if(seg) seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.theme===mode));
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta){
+    const dark = mode==='dark' || (mode==='auto' && sysDark());
+    meta.setAttribute('content', dark ? '#0A100D' : '#0B5738');
+  }
+}
+function setTheme(mode){
+  DB.settings.theme = mode;
+  save(); applyTheme();
+  toast(mode==='auto' ? 'Following your phone' : mode==='dark' ? 'Night mode' : 'Day mode');
+}
+document.addEventListener('click', e=>{
+  const t = e.target.closest('#themebtn,[data-theme]');
+  if(!t) return;
+  if(t.id==='themebtn'){
+    const now = (DB.settings.theme)||'auto';
+    setTheme(now==='auto' ? (sysDark()?'light':'dark') : now==='dark' ? 'light' : 'auto');
+    return;
+  }
+  if(t.dataset.theme) setTheme(t.dataset.theme);
+});
+
+function tickClock(){
+  const d = new Date(), h = d.getHours();
   const word = h<5 ? 'Up late' : h<12 ? 'Good morning' : h<17 ? 'Good afternoon' : h<21 ? 'Good evening' : 'Good night';
-  document.getElementById('greeting').textContent = word+', Vishal';
+  const g = document.getElementById('greeting'), want = word+', Vishal';
+  if(g.textContent !== want) g.textContent = want;
   document.getElementById('stamp').textContent =
-    new Date().toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
-})();
+    d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',second:'2-digit'});
+  document.getElementById('stampd').textContent =
+    d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+}
+tickClock();
+setInterval(tickClock, 1000);
+if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 
 /* boot */
 (async ()=>{
@@ -1716,7 +1795,7 @@ P('usebf').onclick=()=>{
   if(saved) DB = Object.assign(DB, saved);
   DB.days = DB.days||{}; DB.custom=DB.custom||[]; DB.recent=DB.recent||[];
   document.getElementById('q').placeholder='Search '+FOODS.length+' foods…';
-  initLift(); fillSettings(); fillProfile(); showBF(); renderCustom(); render(); drawRest();
+  initLift(); applyTheme(); fillSettings(); fillProfile(); showBF(); renderCustom(); render(); drawRest();
 })();
 
 /* ══════════════════════ TRAINING MODULE ══════════════════════ */
@@ -2372,7 +2451,7 @@ function renderHome(){
 
   /* macros */
   const kp=t.p*4, kc=t.c*4, kf=t.f*9, tot=Math.max(kp+kc+kf,1);
-  html+='<div class="dcard"><div class="dcard-h"><h4>Macros</h4>'+
+  html+='<div class="dcard"><div class="dcard-h"><h4>Calorie meter</h4>'+
     '<span class="hint">'+r0(t.k)+' of '+s.k+' kcal</span></div>'+
     '<div class="msplit"><span style="background:var(--pro);width:'+(kp/tot*100)+'%"></span>'+
     '<span style="background:var(--carb);width:'+(kc/tot*100)+'%"></span>'+
