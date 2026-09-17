@@ -1368,7 +1368,18 @@ const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const trimNum = n => Number(n).toFixed(2).replace(/\.?0+$/,'');
 
 /* ---------- food picker ---------- */
+let lastToday = todayKey();
+function syncDay(){
+  const t = todayKey();
+  if(t === lastToday) return false;
+  if(sheetOpen && editRef!=null) return false; // never switch days under an open edit
+  if(cur === lastToday) cur = t;   // only move if you were looking at today, not a past day
+  lastToday = t; render(); return true;
+}
+setInterval(syncDay, 30000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') syncDay(); });
 function openPick(meal){
+  syncDay();
   pickMeal=meal;
   document.getElementById('pickttl').textContent='Add to '+meal.toLowerCase();
   document.getElementById('q').value=''; filter='All';
@@ -1387,22 +1398,28 @@ function renderRecents(){
   const el=document.getElementById('recents');
   if(!DB.recent.length){ el.innerHTML=''; return; }
   el.innerHTML = DB.recent.slice(0,6).map(r=>
-    '<button class="chip" data-quick="'+esc(r.n)+'|'+esc(r.u)+'|'+r.qty+'">'+esc(r.n)+' · '+trimNum(r.qty)+r.u+'</button>').join('');
+    '<button class="chip" data-quick="'+DB.recent.indexOf(r)+'">'+esc(r.n)+' · '+trimNum(r.qty)+r.u+'</button>').join('');
 }
 function search(q){
   q=q.trim().toLowerCase();
-  let pool = filter==='Mine' ? DB.custom : allFoods().filter(f=>filter==='All'||f.t===filter||(filter==='Veg'&&!f.t));
+  const all = allFoods();
+  let pool = filter==='Mine' ? DB.custom : all.filter(f=>filter==='All'||f.t===filter||(filter==='Veg'&&!f.t));
   let out = pool.filter(f=>f.n.toLowerCase().includes(q));
   out.sort((a,b)=>a.n.toLowerCase().indexOf(q)-b.n.toLowerCase().indexOf(q));
   out = out.slice(0,60);
   document.getElementById('results').innerHTML = out.length? out.map(f=>{
     const per = calcOf(f,f.q);
-    return '<button data-food="'+esc(f.n)+'|'+esc(f.u)+'"><b>'+esc(f.n)+'</b>'+
+    return '<button data-food="'+all.indexOf(f)+'"><b>'+esc(f.n)+'</b>'+
       (f.t&&filter==='All'?'<span class="tag">'+esc(f.t)+'</span>':'')+
       '<span>'+r0(per.k)+' kcal / '+f.q+' '+esc(f.u)+'</span></button>';
   }).join('') : '<div class="empty">No match. Add it as your own food in Settings.</div>';
 }
-function findFood(n,u){ return allFoods().find(f=>f.n===n && f.u===u) || allFoods().find(f=>f.n===n); }
+// k (kcal per unit) tells apart foods that share a name and unit
+function findFood(n,u,k){
+  const all = allFoods();
+  return (k!=null && all.find(f=>f.n===n && f.u===u && Math.abs(f.k-k)<1e-9)) ||
+         all.find(f=>f.n===n && f.u===u) || all.find(f=>f.n===n);
+}
 
 /* ---------- quantity sheet ---------- */
 function openQty(food, qty, ref){
@@ -1479,7 +1496,7 @@ async function save(){ const ok = await store.set(DB); if(!ok) toast('Could not 
 function addEntry(food,qty,meal){
   const c=calcOf(food,qty);
   (DB.days[cur] = DB.days[cur]||[]).push({n:food.n,u:food.u,qty:qty,meal:meal,p:c.p,c:c.c,f:c.f,k:c.k});
-  DB.recent = [{n:food.n,u:food.u,qty:qty}].concat(DB.recent.filter(r=>!(r.n===food.n&&r.u===food.u))).slice(0,12);
+  DB.recent = [{n:food.n,u:food.u,k:food.k,qty:qty}].concat(DB.recent.filter(r=>!(r.n===food.n&&r.u===food.u&&(r.k==null||r.k===food.k)))).slice(0,12);
   save(); render();
 }
 
@@ -1490,18 +1507,22 @@ document.addEventListener('click', e=>{
   if(t.dataset.meal!==undefined) return openPick(t.dataset.meal);
 
   if(t.dataset.edit!==undefined){
-    const i=+t.dataset.edit, e2=entries(cur)[i], f=findFood(e2.n,e2.u);
-    if(f) openQty(f, e2.qty, i);
+    const i=+t.dataset.edit, e2=entries(cur)[i]; if(!e2) return;
+    const q=e2.qty||1, src=findFood(e2.n,e2.u,e2.k/q);
+    // per-unit values come from the entry itself: right food even for duplicates or deleted custom foods
+    const f={n:e2.n, u:e2.u, q:(src&&src.q)||1, p:e2.p/q, c:e2.c/q, f:e2.f/q, k:e2.k/q};
+    openQty(f, e2.qty, i);
     return;
   }
   if(t.dataset.food){
-    const [n,u]=t.dataset.food.split('|'); const f=findFood(n,u);
+    const f=allFoods()[+t.dataset.food];
     if(f){ closeSheets(); setTimeout(()=>openQty(f),200); }
     return;
   }
   if(t.dataset.quick){
-    const [n,u,q]=t.dataset.quick.split('|'); const f=findFood(n,u);
-    if(f){ addEntry(f, parseFloat(q), pickMeal); toast(f.n+' added'); closeSheets(); }
+    syncDay();
+    const r=DB.recent[+t.dataset.quick], f=r && findFood(r.n,r.u,r.k);
+    if(f){ addEntry(f, r.qty, pickMeal); toast(f.n+' added'); closeSheets(); }
     return;
   }
   if(t.dataset.filter){ filter=t.dataset.filter; renderFilters(); search(document.getElementById('q').value); return; }
@@ -1529,6 +1550,7 @@ document.getElementById('plus').onclick=()=>{ const i=document.getElementById('q
 document.getElementById('confirm').onclick=()=>{
   const q=parseFloat(document.getElementById('qv').value)||0;
   if(q<=0) return toast('Enter a quantity above zero');
+  if(editRef==null) syncDay();
   if(editRef!=null){
     const c=calcOf(pending,q), e2=DB.days[cur][editRef];
     Object.assign(e2,{qty:q,p:c.p,c:c.c,f:c.f,k:c.k});
@@ -1610,7 +1632,7 @@ document.getElementById('restorefile').onchange = function(){
   reader.onload = e => {
     const info = document.getElementById('restoreinfo');
     const btn  = document.getElementById('confirmrestore');
-    pendingRestore = null; btn.style.display='none'; info.textContent='';
+    pendingRestore = null; btn.classList.add('hide'); info.style.color=''; info.textContent='';
     try{
       const obj = JSON.parse(e.target.result);
       if((obj._app !== 'calorie-meter' && obj._app !== 'macro-log') || !obj.data)
@@ -1619,11 +1641,11 @@ document.getElementById('restorefile').onchange = function(){
       const ndays = Object.keys(d.days||{}).filter(k=>(d.days[k]||[]).length>0).length;
       const ncust = (d.custom||[]).length;
       pendingRestore = d;
-      info.textContent = 'Backup from '+obj._exported.slice(0,10)+
+      info.textContent = 'Backup from '+String(obj._exported||'unknown date').slice(0,10)+
         ' — '+ndays+' logged day'+(ndays===1?'':'s')+
         ', '+ncust+' custom food'+(ncust===1?'':'s')+
         ', target '+((d.settings||{}).k||'?')+' kcal.';
-      btn.style.display='block';
+      btn.classList.remove('hide');
     } catch(err){
       info.style.color='var(--over)';
       info.textContent = 'Could not read that file: '+err.message;
@@ -1637,7 +1659,7 @@ document.getElementById('confirmrestore').onclick = async ()=>{
   DB = Object.assign({settings:{k:2200,p:160,c:245,f:63,water:3000,sets:20},days:{},custom:[],recent:[]}, pendingRestore);
   const ok = await store.set(DB);
   pendingRestore = null;
-  document.getElementById('confirmrestore').style.display='none';
+  document.getElementById('confirmrestore').classList.add('hide');
   document.getElementById('restoreinfo').textContent = '';
   initLift(); applyTheme(); fillSettings(); fillProfile(); showBF(); renderCustom(); render(); drawRest();
   toast(ok ? 'Restored successfully' : 'Restored (storage not saved — see Settings)');
@@ -1705,7 +1727,7 @@ function showCalc(){
 P('applycalc').onclick=()=>{
   const c=calcTargets();
   if(!c || c.need) return toast('Fill in your details first');
-  DB.settings={k:c.k,p:c.p,c:c.c,f:c.f};
+  DB.settings=Object.assign({}, DB.settings, {k:c.k,p:c.p,c:c.c,f:c.f});
   DB.profile={w:P('pw').value,bf:P('pbf').value,h:P('ph').value,a:P('pa').value,
               sex:P('psex').value,act:P('pact').value,goal:P('pgoal').value,
               pro:P('ppro').value,fat:P('pfat').value};
