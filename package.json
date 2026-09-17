@@ -1,0 +1,13 @@
+{
+  "name": "calorie-meter-security",
+  "private": true,
+  "description": "Automated security assessment for Calorie Meter",
+  "scripts": {
+    "setup": "playwright install chromium",
+    "assess": "playwright test; node scanner/run.js",
+    "report": "node -e \"require('child_process').execSync(process.platform==='win32'?'start results\\\\security-report.md':'open results/security-report.md')\""
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.0"
+  }
+}

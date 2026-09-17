@@ -23,6 +23,12 @@ async function openApp(context, { seed, clock } = {}) {
 }
 
 const tab = (page, v) => page.locator(`.tab[data-v="${v}"]`).click();
+// Backup, restore and CSV export live in a pop-up sheet (older versions had them on the Settings tab)
+async function openBackup(page) {
+  const btn = page.locator('#backupbtn');
+  if (await btn.count()) { await btn.click(); await expect(page.locator('#sheet-backup')).toHaveClass(/on/); }
+  else await tab(page, 'set');
+}
 const db = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('macrolog-v1') || 'null'));
 const foods = (page) => page.evaluate(() => FOODS);
 
@@ -39,4 +45,4 @@ async function logFood(page, { meal, name, qty, nth = 0 }) {
   await page.waitForTimeout(300);
 }
 
-module.exports = { openApp, tab, db, foods, logFood, expect };
+module.exports = { openApp, tab, openBackup, db, foods, logFood, expect };

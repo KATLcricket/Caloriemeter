@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -859,6 +861,206 @@ button.exthumb.has::after{display:none}
 .libcell .wn{flex:1;min-width:0}
 .photonote{font-size:11.5px;color:var(--ink-3);margin-top:10px;line-height:1.5}
 
+/* ═══════════════════════════════════════════════════════════
+   v2 — launch design layer
+   Domain colour system, elevation, editorial type, floating nav
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --food:#E35A1F;      /* nutrition  */
+  --water:#0E8FB4;     /* hydration  */
+  --train:#6D4AE0;     /* training   */
+  --brand:#0B5738;     /* app chrome */
+  --shadow-1:0 1px 2px rgba(16,32,26,.05), 0 10px 26px -18px rgba(16,32,26,.30);
+  --shadow-2:0 2px 6px rgba(16,32,26,.06), 0 22px 44px -26px rgba(16,32,26,.38);
+  --hair:rgba(16,32,26,.09);
+  --r-lg:20px; --r-md:15px; --r-sm:11px;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --food:#FF7A3D; --water:#2FB6DC; --train:#9B80FF; --brand:#2DB872;
+    --shadow-1:0 1px 2px rgba(0,0,0,.5), 0 12px 30px -20px rgba(0,0,0,.8);
+    --shadow-2:0 2px 8px rgba(0,0,0,.55), 0 26px 50px -28px rgba(0,0,0,.9);
+    --hair:rgba(255,255,255,.07);
+  }
+}
+:root[data-theme="dark"]{
+  --food:#FF7A3D; --water:#2FB6DC; --train:#9B80FF; --brand:#2DB872;
+  --shadow-1:0 1px 2px rgba(0,0,0,.5), 0 12px 30px -20px rgba(0,0,0,.8);
+  --shadow-2:0 2px 8px rgba(0,0,0,.55), 0 26px 50px -28px rgba(0,0,0,.9);
+  --hair:rgba(255,255,255,.07);
+}
+/* each tab owns a colour */
+body{--accent:var(--brand)}
+body[data-domain="food"]{--accent:var(--food)}
+body[data-domain="train"]{--accent:var(--train)}
+
+/* ── surfaces: hairline + lift instead of heavy borders ── */
+.dcard,.gauge,.stat,.grp,.backup-grp,.rcard,.ex,.qt,.mc,.ledger,#meals .ledger,.libcell{
+  border-color:var(--hair)
+}
+.dcard,.gauge,.stat,.grp,.backup-grp,.rcard,.ex,.qt,.mc,#meals .ledger{
+  border-width:1px;box-shadow:var(--shadow-1)
+}
+.dcard,#meals .ledger,.grp,.backup-grp{border-radius:var(--r-lg)}
+.gauge,.stat,.qt,.mc,.rcard,.ex{border-radius:var(--r-md)}
+
+/* ── editorial type ── */
+h3.sec{
+  font-size:10.5px;letter-spacing:.11em;font-weight:700;
+  color:var(--ink-3);margin:26px 0 10px
+}
+.dcard-h h4,.rcard-h h4,.ex-h h4{letter-spacing:-.015em}
+.mc .mlabel,.gauge .gl,.wkrow .wl,.libgrp,.sethead{
+  text-transform:uppercase;letter-spacing:.08em;font-size:9.5px;font-weight:700
+}
+.num,.big,.mval,.v,.clock,.kc{font-feature-settings:"tnum" 1}
+
+/* ── buttons ── */
+.btn{
+  border-radius:var(--r-md);box-shadow:var(--shadow-1);
+  letter-spacing:-.01em;transition:transform .12s ease
+}
+.btn:active{transform:scale(.985)}
+.btn.ghost{box-shadow:none;border-color:var(--hair)}
+.mini,.chip,.wateract button{border-radius:99px;border-color:var(--hair)}
+.chip.sel{box-shadow:var(--shadow-1)}
+
+/* ── HOME: day score hero ── */
+.score{
+  position:relative;margin:6px 0 0;padding:22px 18px 18px;
+  border-radius:24px;overflow:hidden;
+  background:var(--surface);box-shadow:var(--shadow-2);
+  border:1px solid var(--hair)
+}
+.score::before{
+  content:'';position:absolute;inset:-40% -20% auto -20%;height:180%;
+  background:
+    radial-gradient(60% 55% at 18% 8%, color-mix(in srgb,var(--food) 22%,transparent) 0%, transparent 62%),
+    radial-gradient(55% 50% at 88% 4%, color-mix(in srgb,var(--water) 20%,transparent) 0%, transparent 60%),
+    radial-gradient(70% 60% at 55% 96%, color-mix(in srgb,var(--train) 16%,transparent) 0%, transparent 62%);
+  pointer-events:none
+}
+.score>*{position:relative}
+.score-top{display:flex;align-items:flex-end;gap:12px;min-width:0}
+.score-n{
+  font-family:var(--disp);font-weight:800;
+  font-size:clamp(50px,16vw,68px);line-height:.85;letter-spacing:-.045em
+}
+.score-n s{text-decoration:none;font-size:22px;opacity:.35;margin-left:2px}
+.score-meta{flex:1;min-width:0;padding-bottom:5px}
+.score-meta b{
+  display:block;font-family:var(--disp);font-size:14.5px;
+  font-weight:700;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.score-meta span{font-size:11.5px;color:var(--ink-3)}
+.streak{
+  flex:0 0 auto;display:flex;align-items:center;gap:5px;
+  padding:6px 11px;border-radius:99px;
+  background:var(--raised);font-size:11.5px;font-weight:700;
+  align-self:flex-start
+}
+.tracks{margin-top:18px;display:grid;gap:11px}
+.trk-row{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;min-width:0}
+.trk-row .tl{
+  font-size:9.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--ink-3)
+}
+.trk-bar{height:7px;border-radius:99px;background:var(--raised);overflow:hidden;min-width:0}
+.trk-bar i{
+  display:block;height:100%;border-radius:99px;
+  transition:width .55s cubic-bezier(.32,.82,.4,1)
+}
+.trk-row .tv{
+  font-family:var(--disp);font-size:12px;font-weight:700;
+  font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap
+}
+
+/* domain-tinted quick stats under the hero */
+.dstats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:11px}
+.dstat{
+  border-radius:var(--r-md);padding:12px 11px;min-width:0;
+  background:var(--surface);border:1px solid var(--hair);box-shadow:var(--shadow-1);
+  position:relative;overflow:hidden
+}
+.dstat::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c)}
+.dstat .dl{
+  font-size:9.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--ink-3)
+}
+.dstat .dv{
+  font-family:var(--disp);font-size:19px;font-weight:700;
+  font-variant-numeric:tabular-nums;margin-top:5px;line-height:1.05;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.dstat .dsub{font-size:10.5px;color:var(--ink-3);margin-top:2px}
+
+/* ── water in domain colour ── */
+.glass i{background:var(--water)}
+.glass.on{border-color:var(--water)}
+.wateract button.main{background:var(--water);border-color:var(--water);color:#fff}
+
+/* ── floating nav ── */
+nav{
+  background:transparent;border-top:0;
+  padding:0 0 calc(8px + env(safe-area-inset-bottom))
+}
+.tabs{
+  margin:0 auto;max-width:440px;
+  background:color-mix(in srgb,var(--surface) 88%,transparent);
+  -webkit-backdrop-filter:saturate(1.6) blur(18px);
+  backdrop-filter:saturate(1.6) blur(18px);
+  border:1px solid var(--hair);
+  border-radius:22px;padding:5px;
+  box-shadow:var(--shadow-2);
+  width:calc(100% - 24px)
+}
+.tab{padding:7px 2px 6px;border-radius:16px;gap:3px;transition:color .18s}
+.tab .icon{width:21px;height:21px}
+.tab .tlabel{font-size:9.5px;letter-spacing:.02em}
+.tab.on{color:var(--accent)}
+.tab.on::before{display:none}
+.tab.on .icon{
+  background:color-mix(in srgb,var(--accent) 14%,transparent);
+  border-radius:9px;transform:scale(1.06)
+}
+.tab .icon{display:grid;place-items:center;transition:transform .18s,background .18s}
+.tab .icon svg{width:19px;height:19px}
+body{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+.restbar{bottom:calc(84px + env(safe-area-inset-bottom));border-radius:18px;
+  left:12px;right:12px;box-shadow:var(--shadow-2)}
+.toast{bottom:100px;box-shadow:var(--shadow-2)}
+
+/* ── top bar ── */
+.greet h2{letter-spacing:-.025em}
+.themebtn{border-color:var(--hair);box-shadow:var(--shadow-1);border-radius:12px}
+.navbtn{border-color:var(--hair);box-shadow:var(--shadow-1)}
+
+/* ── food plate: thicker, softer arcs ── */
+.plate circle{stroke-linecap:round}
+.center .big{letter-spacing:-.045em}
+
+/* ── sheets ── */
+.sheet{border-radius:26px 26px 0 0;box-shadow:0 -8px 60px -12px rgba(0,0,0,.45)}
+.sheet-h{border-bottom-color:var(--hair)}
+
+/* ── entrance motion on tab change ── */
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.viewin>*{animation:rise .34s cubic-bezier(.22,.9,.3,1) both}
+.viewin>*:nth-child(2){animation-delay:.04s}
+.viewin>*:nth-child(3){animation-delay:.08s}
+.viewin>*:nth-child(4){animation-delay:.12s}
+@media(prefers-reduced-motion:reduce){.viewin>*{animation:none}}
+
+/* ── misc polish ── */
+.item{border-top-color:var(--hair)}
+.band+.band{border-top-color:var(--hair)}
+.add-row{border-top-color:var(--hair)}
+.exthumb{border-radius:var(--r-sm)}
+.seg{border-radius:13px}
+.seg button{border-radius:10px}
+.seg button.on{box-shadow:var(--shadow-1)}
+
 </style>
 </head>
 <body>
@@ -1295,6 +1497,37 @@ const FOODS = [{"n":"365 Organic Tofu","u":"g","q":100,"p":0.1071,"c":0.0357,"f"
 const MEALS = ['Breakfast','Lunch','Snack','Workout','Dinner'];
 const KEY = 'macrolog-v1';
 
+/* ---------- data hygiene: stored or restored data is never trusted ---------- */
+// Numbers must be numbers; text loses the characters that could turn it into HTML;
+// dangerous keys (__proto__ etc.) are dropped. Applied on app load and on restore.
+const NUM_KEYS = new Set(['k','p','c','f','q','qty','water','sets','amt','kg','lb','reps','w','weight','rest','ts']);
+const BAD_KEYS = new Set(['__proto__','constructor','prototype']);
+function cleanData(v, key){
+  if(Array.isArray(v)) return v.map(x=>cleanData(x, key));
+  if(v && typeof v==='object'){
+    const o = {};
+    Object.keys(v).forEach(k=>{ if(!BAD_KEYS.has(k)) o[k]=cleanData(v[k], k); });
+    return o;
+  }
+  if(NUM_KEYS.has(key) && typeof v!=='number'){
+    if(v===null || v===undefined || v==='') return v;
+    const n = Number(v); return isFinite(n) ? n : 0;
+  }
+  if(typeof v==='string') return v.replace(/[<>"`]/g,'').slice(0,2000);
+  return v;
+}
+// Returns an error message if a backup's structure is wrong, otherwise null.
+function backupProblem(d){
+  const isObj = x => x && typeof x==='object' && !Array.isArray(x);
+  if(!isObj(d)) return 'The backup has no data section.';
+  if(d.days!==undefined && !isObj(d.days)) return 'The logged days in this backup are not in the right format.';
+  if(d.days && Object.keys(d.days).some(k=>!/^\d{4}-\d{2}-\d{2}$/.test(k) || !Array.isArray(d.days[k]))) return 'Some logged days in this backup are not in the right format.';
+  for(const k of ['custom','recent']) if(d[k]!==undefined && !Array.isArray(d[k])) return 'The '+k+' list in this backup is not in the right format.';
+  for(const k of ['settings','water','profile','lift']) if(d[k]!==undefined && !isObj(d[k])) return 'The '+k+' section in this backup is not in the right format.';
+  if(d.days && Object.values(d.days).some(list=>list.some(e=>!isObj(e) || !MEALS.includes(e.meal)))) return 'Some food entries in this backup are not valid.';
+  return null;
+}
+
 /* ---------- storage: artifact storage if present, else localStorage ---------- */
 const store = {
   async get(){
@@ -1495,7 +1728,7 @@ function openQty(food, qty, ref){
   document.getElementById('confirm').textContent = editRef!=null? 'Update entry':'Add to log';
   document.getElementById('remove').classList.toggle('hide', editRef==null);
   const presets = food.u==='g'? [25,50,75,100,150,200] : food.u==='ml'? [100,150,200,250] : [0.5,1,1.5,2,3];
-  document.getElementById('qpresets').innerHTML = presets.map(p=>'<button class="chip" data-q="'+p+'">'+p+' '+food.u+'</button>').join('');
+  document.getElementById('qpresets').innerHTML = presets.map(p=>'<button class="chip" data-q="'+p+'">'+p+' '+esc(food.u)+'</button>').join('');
   updPreview();
   openSheet('sheet-qty');
 }
@@ -1598,7 +1831,11 @@ document.addEventListener('click', e=>{
     view=t.dataset.v;
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
     ['home','today','train','trends','set'].forEach(v=>document.getElementById('v-'+v).classList.toggle('hide',v!==view));
+    setDomain();
     render(); window.scrollTo(0,0);
+    const sec=document.getElementById('v-'+view);
+    const box=sec.firstElementChild||sec;
+    box.classList.remove('viewin'); void box.offsetWidth; box.classList.add('viewin');
   }
 });
 
@@ -1702,7 +1939,9 @@ document.getElementById('restorefile').onchange = function(){
       const obj = JSON.parse(e.target.result);
       if((obj._app !== 'calorie-meter' && obj._app !== 'macro-log') || !obj.data)
         throw new Error('This does not look like a Calorie Meter backup file.');
-      const d = obj.data;
+      const problem = backupProblem(obj.data);
+      if(problem) throw new Error(problem);
+      const d = cleanData(obj.data);
       const ndays = Object.keys(d.days||{}).filter(k=>(d.days[k]||[]).length>0).length;
       const ncust = (d.custom||[]).length;
       pendingRestore = d;
@@ -1734,7 +1973,9 @@ document.getElementById('export').onclick=()=>{
   const rows=[['Date','Meal','Item','Qty','Unit','Protein','Carbs','Fat','Kcal']];
   Object.keys(DB.days).sort().forEach(d=>entries(d).forEach(e=>
     rows.push([d,e.meal,e.n,trimNum(e.qty),e.u,r1(e.p),r1(e.c),r1(e.f),r0(e.k)])));
-  const csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
+  // A leading = + - @ tab or CR makes Excel run the cell as a formula; prefix text cells with '
+  const safeCell=x=>{ const t=String(x); return /^[=+\-@\t\r]/.test(t) && !/^-?\d+(\.\d+)?$/.test(t) ? "'"+t : t; };
+  const csv=rows.map(r=>r.map(x=>'"'+safeCell(x).replace(/"/g,'""')+'"').join(',')).join('\n');
   dlFile(csv, 'calorie-meter-'+isoNow()+'.csv', 'text/csv');
   toast('CSV downloaded');
 };
@@ -1897,7 +2138,8 @@ if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEvent
 /* boot */
 (async ()=>{
   const saved = await store.get();
-  if(saved) DB = Object.assign(DB, saved);
+  // Clean (never discard) what's already saved, so existing logs are always kept.
+  if(saved && typeof saved==='object') DB = Object.assign(DB, cleanData(saved));
   DB.days = DB.days||{}; DB.custom=DB.custom||[]; DB.recent=DB.recent||[];
   document.getElementById('q').placeholder='Search '+FOODS.length+' foods…';
   initLift(); applyTheme(); fillSettings(); fillProfile(); showBF(); renderCustom(); render(); drawRest();
@@ -2545,6 +2787,16 @@ function waterCardHTML(){
     '<button data-wadd="500">+ 500 ml</button></div></div>';
 }
 
+function gauge(pct, colour, big, label, value){
+  const R=28, C=2*Math.PI*R, p=Math.min(pct,1);
+  return '<div class="gauge"><div class="ring"><svg viewBox="0 0 66 66">'+
+    '<circle class="gt" cx="33" cy="33" r="'+R+'" stroke-width="7"/>'+
+    '<circle cx="33" cy="33" r="'+R+'" stroke-width="7" stroke="'+colour+'" '+
+    'stroke-dasharray="'+(p*C).toFixed(1)+' '+C.toFixed(1)+'"'+(p?'':' opacity=".15"')+'/>'+
+    '</svg><div class="pct" style="color:'+colour+'">'+big+'</div></div>'+
+    '<div class="gl">'+label+'</div><div class="gv">'+value+'</div></div>';
+}
+
 function renderHome(){
   const s=DB.settings, list=entries(cur), t=totals(list);
   const wml=waterOf(cur), wgoal=s.water||3000;
@@ -2554,9 +2806,9 @@ function renderHome(){
   const setGoal=s.sets||20;
 
   let html='<div class="gauges">'+
-    gauge(t.k/Math.max(s.k,1), 'var(--accent)', Math.round(t.k/Math.max(s.k,1)*100)+'%', 'Food', r0(t.k)+' / '+s.k)+
-    gauge(wml/wgoal, '#2E8BC0', Math.round(wml/wgoal*100)+'%', 'Water', (wml/1000).toFixed(1)+' / '+(wgoal/1000).toFixed(1)+'L')+
-    gauge(sets/setGoal, 'var(--fat)', sets? sets : '–', 'Train', ws.length? fmtVol(vol)+' '+U() : 'no session')+
+    gauge(t.k/Math.max(s.k,1), 'var(--food)', Math.round(t.k/Math.max(s.k,1)*100)+'%', 'Food', r0(t.k)+' / '+s.k)+
+    gauge(wml/wgoal, 'var(--water)', Math.round(wml/wgoal*100)+'%', 'Water', (wml/1000).toFixed(1)+' / '+(wgoal/1000).toFixed(1)+'L')+
+    gauge(sets/setGoal, 'var(--train)', sets? sets : '–', 'Train', ws.length? fmtVol(vol)+' '+U() : 'no session')+
   '</div>';
 
   /* macros */
@@ -2595,9 +2847,9 @@ function renderHome(){
   const bars=(arr,colour,max)=>'<div class="wkbars">'+arr.map(v=>
     '<div><i style="height:'+(v/max*100)+'%;background:'+(v?colour:'var(--raised)')+'"></i></div>').join('')+'</div>';
   html+='<div class="dcard wk"><div class="dcard-h"><h4>Last 7 days</h4></div>'+
-    '<div class="wkrow"><span class="wl">Calories</span>'+bars(kcals,'var(--accent)',Math.max(mx(kcals),s.k))+'</div>'+
-    '<div class="wkrow"><span class="wl">Water</span>'+bars(waters,'#2E8BC0',Math.max(mx(waters),wgoal))+'</div>'+
-    '<div class="wkrow"><span class="wl">Volume</span>'+bars(vols,'var(--fat)',mx(vols))+'</div>'+
+    '<div class="wkrow"><span class="wl">Calories</span>'+bars(kcals,'var(--food)',Math.max(mx(kcals),s.k))+'</div>'+
+    '<div class="wkrow"><span class="wl">Water</span>'+bars(waters,'var(--water)',Math.max(mx(waters),wgoal))+'</div>'+
+    '<div class="wkrow"><span class="wl">Volume</span>'+bars(vols,'var(--train)',mx(vols))+'</div>'+
     '<div class="wkdays">'+days.map(d=>{
       const [y,m,dd]=d.split('-').map(Number);
       return '<span>'+new Date(y,m-1,dd).toLocaleDateString(undefined,{weekday:'narrow'})+'</span>';
@@ -2698,6 +2950,17 @@ document.addEventListener('click', e=>{
   }
   pickPhoto(t.dataset.photo);
 });
+
+/* ---------- each tab carries its own accent colour ---------- */
+function setDomain(){
+  const map={today:'food', train:'train'};
+  const dom=map[view];
+  if(dom) document.body.setAttribute('data-domain',dom);
+  else document.body.removeAttribute('data-domain');
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta && !document.documentElement.getAttribute('data-theme')) return;
+}
+setDomain();
 
 </script>
 </body>

@@ -1,0 +1,4 @@
+{
+  "_help": "Risk acceptance register. Add an entry to consciously accept a finding so it stops blocking deploys. Every entry needs an owner, a reason and an expiry date (max ~6 months), after which it blocks again.",
+  "accepted": []
+}
