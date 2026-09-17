@@ -1,0 +1,13 @@
+{
+  "name": "calorie-meter-qa",
+  "private": true,
+  "description": "Automated QA tests for Calorie Meter",
+  "scripts": {
+    "test": "playwright test",
+    "report": "playwright show-report qa-report",
+    "setup": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.0"
+  }
+}
