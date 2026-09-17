@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -795,6 +795,23 @@ nav{
   border-top:1.5px solid var(--line);margin-top:12px;padding-top:4px
 }
 
+/* ══════ iOS: never let a focused field trigger auto-zoom ══════
+   Safari zooms the page whenever a focused control is under 16px.
+   Every input, select and textarea therefore sits at 16px or above. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,select,textarea{font-size:16px!important;line-height:1.2}
+.in,.search{font-size:16px!important;padding:12px 13px}
+select.in{font-size:16px!important}
+.cell .cv{font-size:16px!important;max-width:58vw}
+.cell input.cv{width:92px}
+.cell label{font-size:14.5px}
+.sin{font-size:16px!important;padding:9px 2px;font-weight:700}
+.qty-wrap .in{font-size:28px!important}
+.bdrow input{font-size:16px!important;width:68px}
+.sethead,.setrow{grid-template-columns:22px minmax(0,1fr) minmax(0,1.05fr) minmax(0,1.05fr) 32px;gap:5px}
+.setgrid{padding:0 12px 4px}
+.tick{width:30px;height:30px}
+button,a,.tab,.chip,.item,.wrow{touch-action:manipulation}
 </style>
 </head>
 <body>
